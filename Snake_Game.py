@@ -22,6 +22,7 @@ class SnakeGame():
         self.frame_rate = fr
         self.food_spawn = True
         self.game_over = False
+        self.orientation = "RIGHT"
         self.score = 0
         self.snake_pos = [100, 50]
         self.snake_body = [
@@ -62,6 +63,8 @@ class SnakeGame():
             self.snake_pos[0] -= 10
         if direction == 'RIGHT':
             self.snake_pos[0] += 10
+
+        self.orientation = direction
 
         # Snake body growing mechanism
         self.snake_body.insert(0, list(self.snake_pos))
@@ -231,37 +234,26 @@ class SnakeEnvironment(SnakeGame):
 
         return False  # No danger found after checking
 
-    def is_danger(self, direction):
-        for i in range(1, 11):  # Check up to 10 blocks ahead
-            new_pos = self.snake_pos.copy()
-            if direction == 'UP':
-                new_pos[1] -= i * 10
-            elif direction == 'DOWN':
-                new_pos[1] += i * 10
-            elif direction == 'LEFT':
-                new_pos[0] -= i * 10
-            elif direction == 'RIGHT':
-                new_pos[0] += i * 10
-
-            if self.check_collision(new_pos):  # Assuming check_collision checks for walls or body collisions
-                return True
-        return False
-    
     def get_food_position(self):
-        """Determine where the food is relative to the snake's current position and direction."""
-        food_pos = self.food_pos
-        snake_pos = self.snake_pos
+        head_x, head_y = self.snake_pos  # Snake's head position
+        food_x, food_y = self.food_pos   # Food's position
         
-        # Food position relative to the snake
-        if food_pos[0] == snake_pos[0] and food_pos[1] < snake_pos[1]:
-            return "BEHIND"
-        elif food_pos[0] == snake_pos[0] and food_pos[1] > snake_pos[1]:
-            return "AHEAD"
-        elif food_pos[1] == snake_pos[1] and food_pos[0] < snake_pos[0]:
-            return "LEFT"
-        elif food_pos[1] == snake_pos[1] and food_pos[0] > snake_pos[0]:
-            return "RIGHT"
-        return "NONE"
+        if self.orientation == 'UP':
+            if food_y < head_y:
+                return 'AHEAD'
+            elif food_y > head_y:
+                return 'BEHIND'
+            elif food_x < head_x:
+                return 'LEFT'
+            elif food_x > head_x:
+                return 'RIGHT'
+        elif self.orientation == 'DOWN':
+            # Similar for DOWN direction
+            # Compare head_y to food_y
+        elif self.orientation == 'LEFT':
+            # Similar for LEFT direction
+        elif self.orientation == 'RIGHT':
+            # Similar for RIGHT direction
     
     def check_collision(self, position):
         """Check if there is a collision at the given position."""
