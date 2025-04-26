@@ -14,7 +14,7 @@ import pygame, sys, random
 env = SnakeEnvironment()
 env.init()
 
-directions = ['UP', 'DOWN', 'LEFT', 'RIGHT']
+directions = ['STRAIGHT', 'LEFT', 'RIGHT']
 
 class Model:
     def __init__(self):
@@ -22,24 +22,47 @@ class Model:
         self.gamma = 0.95
         pass
 
-    def get_direction():
+    def get_direction(self, state):
+        return "RIGHT"
         pass
 
-    def update(old_state, reward, new_state):
+    def update(self, old_state, reward, new_state):
         pass
 
+model = Model()
+
+eps = 1
+eps_decay = 0.001
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             pygame.quit()
             sys.exit()
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                print("\n")
+                old_state = env.get_state()
+                if (random.random() < 1 - eps):
+                    action = model.get_direction(old_state)
+                    print("Exploiting")
+                else:
+                    action = random.choice(directions)
+                    print("Picking randomly")
 
-    action = random.choice(directions)
-    reward, old_state, new_state, terminated = env.step(action)
+                print(f"Action taken: {action}")
+                reward, new_state, terminated = env.step(action)
+                print(f"Old State: {old_state}")
+                print(f"Reward: {reward}")
+                print(f"New State: {new_state}")
+                print(f"Game Over: {terminated}")
+                print(f"Current Score: {env.score}")
+                
+                # Update Q Table 
+                if (env.game_over):
+                    env.restart()
 
-    # Update Q Table 
-    if (env.game_over):
-        env.restart()
+                eps -= eps_decay
+                eps = max(0, eps)
 
 # When game over, quit cleanly
 game.end()

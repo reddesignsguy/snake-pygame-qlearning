@@ -48,11 +48,14 @@ class SnakeGame():
         # Initialise game window
         pygame.display.set_caption('Snake Eater')
         self.game_window = pygame.display.set_mode((self.frame_size_x, self.frame_size_y))
-        
-    def step(self, direction):
+
+    def step(self, action):
         if self.game_over:
             print("Game already over. Must restart environment!")
             return
+    
+        # Convert relative action to absolute direction
+        direction = self.get_absolute_direction(action)
 
         # Moving the snake
         if direction == 'UP':
@@ -104,7 +107,38 @@ class SnakeGame():
         pygame.quit()
         sys.exit()
         return
-    
+        
+    def get_absolute_direction(self, relative_action):
+        """Convert relative action (STRAIGHT, LEFT, RIGHT) to absolute direction (UP, DOWN, LEFT, RIGHT)"""
+        if self.orientation == 'UP':
+            if relative_action == 'STRAIGHT':
+                return 'UP'
+            elif relative_action == 'LEFT':
+                return 'LEFT'
+            elif relative_action == 'RIGHT':
+                return 'RIGHT'
+        elif self.orientation == 'DOWN':
+            if relative_action == 'STRAIGHT':
+                return 'DOWN'
+            elif relative_action == 'LEFT':
+                return 'RIGHT'
+            elif relative_action == 'RIGHT':
+                return 'LEFT'
+        elif self.orientation == 'LEFT':
+            if relative_action == 'STRAIGHT':
+                return 'LEFT'
+            elif relative_action == 'LEFT':
+                return 'DOWN'
+            elif relative_action == 'RIGHT':
+                return 'UP'
+        elif self.orientation == 'RIGHT':
+            if relative_action == 'STRAIGHT':
+                return 'RIGHT'
+            elif relative_action == 'LEFT':
+                return 'UP'
+            elif relative_action == 'RIGHT':
+                return 'DOWN'
+
     def render(self):
         # Body
         self.game_window.fill(black)
@@ -139,7 +173,6 @@ class SnakeEnvironment(SnakeGame):
         super().__init__(fr=frame_rate)
     
     def step(self, action):
-        old_state = self.get_state()
         old_score = self.score
 
         super().step(action)
@@ -147,7 +180,7 @@ class SnakeEnvironment(SnakeGame):
         reward = self.get_reward(old_score)
         new_state = self.get_state()
         terminated = self.game_over
-        return (old_state, reward, new_state, terminated)
+        return (reward, new_state, terminated)
     
     def get_state(self):
         # State 1: Is there danger straight / left / right?
