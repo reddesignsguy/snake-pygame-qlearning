@@ -248,12 +248,32 @@ class SnakeEnvironment(SnakeGame):
             elif food_x > head_x:
                 return 'RIGHT'
         elif self.orientation == 'DOWN':
-            # Similar for DOWN direction
-            # Compare head_y to food_y
+            if food_y > head_y:
+                return 'AHEAD'
+            elif food_y < head_y:
+                return 'BEHIND'
+            elif food_x > head_x:
+                return 'LEFT'
+            elif food_x < head_x:
+                return 'RIGHT'
         elif self.orientation == 'LEFT':
-            # Similar for LEFT direction
+            if food_x < head_x:
+                return 'AHEAD'
+            elif food_x > head_x:
+                return 'BEHIND'
+            elif food_y > head_y:
+                return 'LEFT'
+            elif food_y < head_y:
+                return 'RIGHT'
         elif self.orientation == 'RIGHT':
-            # Similar for RIGHT direction
+            if food_x > head_x:
+                return 'AHEAD'
+            elif food_x < head_x:
+                return 'BEHIND'
+            elif food_y < head_y:
+                return 'LEFT'
+            elif food_y > head_y:
+                return 'RIGHT'
     
     def check_collision(self, position):
         """Check if there is a collision at the given position."""
