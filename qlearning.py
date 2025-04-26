@@ -8,13 +8,25 @@ epsilon = 1
 
 # Create agent
 # Improve QTable by running agent in the game
-from Snake_Game import SnakeGame
+from Snake_Game import SnakeEnvironment
 import pygame, sys, random
 
-game = SnakeGame()
-game.init()
+env = SnakeEnvironment()
+env.init()
 
 directions = ['UP', 'DOWN', 'LEFT', 'RIGHT']
+
+class Model:
+    def __init__(self):
+        self.alpha = 0.05
+        self.gamma = 0.95
+        pass
+
+    def get_direction():
+        pass
+
+    def update(old_state, reward, new_state):
+        pass
 
 while True:
     for event in pygame.event.get():
@@ -23,12 +35,11 @@ while True:
             sys.exit()
 
     action = random.choice(directions)
-    reward, old_state, new_state, terminated = game.step(action)
+    reward, old_state, new_state, terminated = env.step(action)
 
     # Update Q Table 
-
-    if (game.game_over):
-        game.restart()
+    if (env.game_over):
+        env.restart()
 
 # When game over, quit cleanly
 game.end()

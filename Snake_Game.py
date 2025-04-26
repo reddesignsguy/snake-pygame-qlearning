@@ -135,10 +135,10 @@ class SnakeGame():
 
 
 class SnakeEnvironment(SnakeGame):
-    def __init__(self, frame_rate):
+    def __init__(self, frame_rate=25):
         super().__init__(fr=frame_rate)
     
-    def step(self, action) ->  Tuple[Dict[str, str, str], int, Dict[str, str, str], bool] :
+    def step(self, action):
         old_state = self.get_state()
         old_score = self.score
 
@@ -151,12 +151,12 @@ class SnakeEnvironment(SnakeGame):
     
     def get_state(self):
         # State 1: Is there danger straight / left / right?
-        danger_straight = self.is_danger('straight')
-        danger_left = self.is_danger('left')
-        danger_right = self.is_danger('right')
+        danger_straight = self.is_danger('STRAIGHT')
+        danger_left = self.is_danger('LEFT')
+        danger_right = self.is_danger('RIGHT')
         
         # State 2: Current direction (up/down/left/right)
-        direction = self.direction
+        direction = self.orientation
         
         # State 3: Food is to the left / right / ahead / behind
         food_position = self.get_food_position()
@@ -190,13 +190,13 @@ class SnakeEnvironment(SnakeGame):
         if direction == 'STRAIGHT':
             # Check straight ahead in the current direction for up to 10 blocks
             for i in range(1, 11):  # Iterate from 1 to 10 blocks ahead
-                if self.snake_direction == 'UP':
+                if self.orientation == 'UP':
                     new_pos = [self.snake_pos[0], self.snake_pos[1] - i * 10]  # Straight up
-                elif self.snake_direction == 'DOWN':
+                elif self.orientation == 'DOWN':
                     new_pos = [self.snake_pos[0], self.snake_pos[1] + i * 10]  # Straight down
-                elif self.snake_direction == 'LEFT':
+                elif self.orientation == 'LEFT':
                     new_pos = [self.snake_pos[0] - i * 10, self.snake_pos[1]]  # Straight left
-                elif self.snake_direction == 'RIGHT':
+                elif self.orientation == 'RIGHT':
                     new_pos = [self.snake_pos[0] + i * 10, self.snake_pos[1]]  # Straight right
                 
                 if self.check_collision(new_pos):  # Check if the current block is blocked
@@ -205,13 +205,13 @@ class SnakeEnvironment(SnakeGame):
         elif direction == 'LEFT':
             # Check left of the snake's head for up to 10 blocks
             for i in range(1, 11):  # Iterate from 1 to 10 blocks to the left
-                if self.snake_direction == 'UP':
+                if self.orientation == 'UP':
                     new_pos = [self.snake_pos[0] - i * 10, self.snake_pos[1]]  # Look left
-                elif self.snake_direction == 'DOWN':
+                elif self.orientation == 'DOWN':
                     new_pos = [self.snake_pos[0] + i * 10, self.snake_pos[1]]  # Look right
-                elif self.snake_direction == 'LEFT':
+                elif self.orientation == 'LEFT':
                     new_pos = [self.snake_pos[0], self.snake_pos[1] + i * 10]  # Look down
-                elif self.snake_direction == 'RIGHT':
+                elif self.orientation == 'RIGHT':
                     new_pos = [self.snake_pos[0], self.snake_pos[1] - i * 10]  # Look up
                 
                 if self.check_collision(new_pos):  # Check if the current block is blocked
@@ -220,13 +220,13 @@ class SnakeEnvironment(SnakeGame):
         elif direction == 'RIGHT':
             # Check right of the snake's head for up to 10 blocks
             for i in range(1, 11):  # Iterate from 1 to 10 blocks to the right
-                if self.snake_direction == 'UP':
+                if self.orientation == 'UP':
                     new_pos = [self.snake_pos[0] + i * 10, self.snake_pos[1]]  # Right of the head
-                elif self.snake_direction == 'DOWN':
+                elif self.orientation == 'DOWN':
                     new_pos = [self.snake_pos[0] - i * 10, self.snake_pos[1]]  # Right of the head
-                elif self.snake_direction == 'LEFT':
+                elif self.orientation == 'LEFT':
                     new_pos = [self.snake_pos[0], self.snake_pos[1] - i * 10]  # Right of the head
-                elif self.snake_direction == 'RIGHT':
+                elif self.orientation == 'RIGHT':
                     new_pos = [self.snake_pos[0], self.snake_pos[1] + i * 10]  # Right of the head
                 
                 if self.check_collision(new_pos):  # Check if the current block is blocked
