@@ -19,8 +19,10 @@ manual_mode = False  # Set to False for automatic execution
 
 class QTable:
     def __init__(self):
-        self.alpha = 0.05
-        self.gamma = 0.95
+        self.alpha = 0.1
+        self.alpha_min = 0.01
+        self.alpha_decay = 0.9995
+        self.gamma = 0.99
         self.table = {}
         pass
 
@@ -68,7 +70,9 @@ class QTable:
         current_q = self.table[old_state_key][action]
         new_q = current_q + self.alpha * (reward + self.gamma * max_next_q - current_q)
         self.table[old_state_key][action] = new_q
-        pass
+
+        # Decay alpha
+        self.alpha = max(self.alpha_min, self.alpha * self.alpha_decay)
 
     def state_to_key(self, state):
         """Convert state dictionary to a hashable tuple with consistent ordering"""
@@ -80,8 +84,9 @@ class QTable:
 model = QTable()
 
 eps = 1
-eps_decay = 0.000005
+eps_decay = 0.99
 steps = 0
+episode = 0
 episode_length = 1000
 
 # Frame rate control
@@ -90,7 +95,9 @@ FPS = 5000  # Frames per second
 
 while True:
     # Control frame rate
-    clock.tick(FPS)
+    # clock.tick(FPS)
+    # pygame.time.wait(1)
+
     
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -105,27 +112,30 @@ while True:
     action = None
     if (random.random() < 1 - eps):
         action = model.get_direction(old_state)
-        print("Exploiting")
     else:
         action = random.choice(action_space)
-        print("Picking randomly")
 
-    print(f"Action taken: {action}")
     reward, new_state, terminated = env.step(action)
+    
+    # Update Q Table 
+    steps+=1
+    model.update(old_state, reward, action, new_state)
+
+    print(f"Episode: {episode}")
+    print(f"Step: {steps}")
+    print(f"Action taken: {action}")
     print(f"Old State: {old_state}")
     print(f"Reward: {reward}")
     print(f"New State: {new_state}")
     print(f"Game Over: {terminated}")
     print(f"Current Score: {env.score}")
     print(f"Q Table size: {len(model.table)}")
-    
-    # Update Q Table 
-    steps+=1
-    eps -= eps_decay
-    eps = max(0, eps)
+    print(f"Epsilon: {eps}")
 
     if (env.game_over or steps >= episode_length):
+        episode += 1
         steps = 0
+        eps *= eps_decay
         env.restart()
 
 # When game over, quit cleanly

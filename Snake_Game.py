@@ -15,8 +15,8 @@ blue = pygame.Color(0, 0, 255)
 
 class SnakeGame():
     def __init__(self, get_direction=None, fr=20):
-        self.frame_size_x = int(720 / 1.3)
-        self.frame_size_y = int(480 / 1.3)
+        self.frame_size_x = int(720)
+        self.frame_size_y = int(480)
         self.game_window = None
         self.fps_controller = pygame.time.Clock()
         self.frame_rate = fr
@@ -206,10 +206,10 @@ class SnakeEnvironment(SnakeGame):
     
     def step(self, action):
         old_score = self.score
-
+        old_food_dist = self.get_food_distance()
         super().step(action)
 
-        reward = self.get_reward(old_score)
+        reward = self.get_reward(old_score, old_food_dist)
         new_state = self.get_state()
         terminated = self.game_over
         return (reward, new_state, terminated)
@@ -234,7 +234,13 @@ class SnakeEnvironment(SnakeGame):
             "food_position": food_position
         }
     
-    def get_reward(self, old_score) -> int:
+    def get_food_distance(self):
+        """Calculate Euclidean distance between snake head and food"""
+        head_x, head_y = self.snake_pos
+        food_x, food_y = self.food_pos
+        return ((head_x - food_x) ** 2 + (head_y - food_y) ** 2) ** 0.5
+
+    def get_reward(self, old_score, old_food_dist) -> int:
         # died
         if self.game_over:
             if self.score < 10: # strong penalty for early death
@@ -243,13 +249,18 @@ class SnakeEnvironment(SnakeGame):
                 return -5
             else:
                 return -2
-
         # got food
         if self.score > old_score:
             return 10
-        # still survived
-        elif old_score == self.score:
+        
+        if self.get_food_distance() < old_food_dist:
             return 1
+        
+        
+
+        # still survived
+        if old_score == self.score:
+            return 0
 
             
     def is_danger(self, direction):
