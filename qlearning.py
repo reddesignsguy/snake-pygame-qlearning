@@ -19,9 +19,10 @@ manual_mode = False  # Set to False for automatic execution
 
 class QTable:
     def __init__(self):
-        self.alpha = 0.1
-        self.alpha_min = 0.01
-        self.alpha_decay = 0.9995
+        self.alpha_max = 0.1
+        self.alpha_min = 0.0001
+        self.alpha = self.alpha_max
+        self.alpha_decay = 0.99995
         self.gamma = 0.99
         self.table = {}
         pass
@@ -49,7 +50,7 @@ class QTable:
             
         return best_action
 
-    def update(self, old_state, reward, action, new_state):
+    def update(self, old_state, reward, action, new_state, percent_convergence = 100):
         # Convert states to keys if they're dictionaries
         old_state_key = self.state_to_key(old_state) if isinstance(old_state, dict) else old_state
         new_state_key = self.state_to_key(new_state) if isinstance(new_state, dict) else new_state
@@ -66,13 +67,17 @@ class QTable:
             next_q = self.table.get(new_state_key, {}).get(direction, 0)
             max_next_q = max(max_next_q, next_q)
 
+        # Calculate alpha based on percent_convergence
+        # When percent_convergence is 0, alpha = alpha_max
+        # When percent_convergence is 100, alpha = alpha_min
+        convergence_factor = percent_convergence / 100.0
+        self.alpha = self.alpha_max - (self.alpha_max - self.alpha_min) * convergence_factor
+        self.alpha = max(self.alpha_min, min(self.alpha_max, self.alpha))
+
         # Update Q-value using Bellman equation
         current_q = self.table[old_state_key][action]
         new_q = current_q + self.alpha * (reward + self.gamma * max_next_q - current_q)
         self.table[old_state_key][action] = new_q
-
-        # Decay alpha
-        self.alpha = max(self.alpha_min, self.alpha * self.alpha_decay)
 
     def state_to_key(self, state):
         """Convert state dictionary to a hashable tuple with consistent ordering"""
@@ -88,6 +93,8 @@ eps_decay = 0.99
 steps = 0
 episode = 0
 episode_length = 1000
+final_episode_length = 10000
+eps_threshold = 0.1  # When epsilon falls below this, increase episode length
 
 # Frame rate control
 clock = pygame.time.Clock()
@@ -117,9 +124,21 @@ while True:
 
     reward, new_state, terminated = env.step(action)
     
+    # Calculate percent_convergence based on epsilon
+    # When epsilon is 1.0, percent_convergence is 0
+    # When epsilon is eps_threshold (0.1) or less, percent_convergence is 100
+    # Linear interpolation between these points
+    if eps >= 1.0:
+        percent_convergence = 0
+    elif eps <= eps_threshold:
+        percent_convergence = 100
+    else:
+        # Map epsilon from [eps_threshold, 1.0] to [100, 0]
+        percent_convergence = 100 * (1.0 - (eps - eps_threshold) / (1.0 - eps_threshold))
+    
     # Update Q Table 
     steps+=1
-    model.update(old_state, reward, action, new_state)
+    model.update(old_state, reward, action, new_state, percent_convergence)
 
     print(f"Episode: {episode}")
     print(f"Step: {steps}")
@@ -131,11 +150,18 @@ while True:
     print(f"Current Score: {env.score}")
     print(f"Q Table size: {len(model.table)}")
     print(f"Epsilon: {eps}")
+    print(f"Alpha: {model.alpha}")
 
     if (env.game_over or steps >= episode_length):
         episode += 1
         steps = 0
         eps *= eps_decay
+        
+        # Increase episode length when epsilon falls below threshold
+        if eps < eps_threshold and episode_length < final_episode_length:
+            episode_length = final_episode_length
+            print(f"\nIncreasing episode length to {final_episode_length}!")
+            
         env.restart()
 
 # When game over, quit cleanly

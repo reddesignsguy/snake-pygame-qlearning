@@ -255,8 +255,8 @@ class SnakeEnvironment(SnakeGame):
         
         if self.get_food_distance() < old_food_dist:
             return 1
-        
-        
+        elif self.get_food_distance() > old_food_dist:
+            return -1
 
         # still survived
         if old_score == self.score:
@@ -299,13 +299,13 @@ class SnakeEnvironment(SnakeGame):
             # Check right of the snake's head for up to 10 blocks
             for i in range(1, 11):  # Iterate from 1 to 10 blocks to the right
                 if self.orientation == 'UP':
-                    new_pos = [self.snake_pos[0] + i * 10, self.snake_pos[1]]  # Right of the head
+                    new_pos = [self.snake_pos[0] + i * 10, self.snake_pos[1]]  # Look right
                 elif self.orientation == 'DOWN':
-                    new_pos = [self.snake_pos[0] - i * 10, self.snake_pos[1]]  # Right of the head
+                    new_pos = [self.snake_pos[0] - i * 10, self.snake_pos[1]]  # Look left
                 elif self.orientation == 'LEFT':
-                    new_pos = [self.snake_pos[0], self.snake_pos[1] - i * 10]  # Right of the head
+                    new_pos = [self.snake_pos[0], self.snake_pos[1] - i * 10]  # Look up
                 elif self.orientation == 'RIGHT':
-                    new_pos = [self.snake_pos[0], self.snake_pos[1] + i * 10]  # Right of the head
+                    new_pos = [self.snake_pos[0], self.snake_pos[1] + i * 10]  # Look down
                 
                 if self.check_collision(new_pos):  # Check if the current block is blocked
                     return True  # Danger found, return True
@@ -324,9 +324,10 @@ class SnakeEnvironment(SnakeGame):
         if self.orientation == 'UP':
             if food_y < head_y:
                 isAhead = True
-            elif food_y > head_y:
+            if food_y > head_y:
                 isBehind = True
-            elif food_x < head_x:
+
+            if food_x < head_x:
                 isLeft = True
             elif food_x > head_x:
                 isRight = True
@@ -335,7 +336,8 @@ class SnakeEnvironment(SnakeGame):
                 isAhead = True
             elif food_y < head_y:
                 isBehind = True
-            elif food_x > head_x:
+
+            if food_x > head_x:
                 isLeft = True
             elif food_x < head_x:
                 isRight = True
@@ -344,7 +346,8 @@ class SnakeEnvironment(SnakeGame):
                 isAhead = True
             elif food_x > head_x:
                 isBehind = True
-            elif food_y > head_y:
+
+            if food_y > head_y:
                 isLeft = True
             elif food_y < head_y:
                 isRight = True
@@ -353,7 +356,8 @@ class SnakeEnvironment(SnakeGame):
                 isAhead = True
             elif food_x < head_x:
                 isBehind = True
-            elif food_y < head_y:
+
+            if food_y < head_y:
                 isLeft = True
             elif food_y > head_y:
                 isRight = True
