@@ -15,8 +15,8 @@ blue = pygame.Color(0, 0, 255)
 
 class SnakeGame():
     def __init__(self, get_direction=None, fr=20):
-        self.frame_size_x = 720
-        self.frame_size_y = 480
+        self.frame_size_x = int(720 / 1.3)
+        self.frame_size_y = int(480 / 1.3)
         self.game_window = None
         self.fps_controller = pygame.time.Clock()
         self.frame_rate = fr
@@ -24,16 +24,16 @@ class SnakeGame():
         self.game_over = False
         self.orientation = "RIGHT"
         self.score = 0
+        self.high_score = 0
+        self.steps_survived = 0
+        self.highest_steps_survived = 0
         self.snake_pos = [100, 50]
-        self.snake_body = [
-            [100, 50],
-            [100 - 10, 50],
-            [100 - (2 * 10), 50]
-        ]
         self.food_pos = [
             random.randrange(1, (self.frame_size_x // 10)) * 10,
             random.randrange(1, (self.frame_size_y // 10)) * 10
         ]
+        self.snake_body = []
+        self.initialize_snake_body()
 
     # Init game window
     def init(self):
@@ -44,7 +44,6 @@ class SnakeGame():
         else:
             print('[+] Game successfully initialised')
 
-
         # Initialise game window
         pygame.display.set_caption('Snake Eater')
         self.game_window = pygame.display.set_mode((self.frame_size_x, self.frame_size_y))
@@ -53,6 +52,8 @@ class SnakeGame():
         if self.game_over:
             print("Game already over. Must restart environment!")
             return
+
+        self.steps_survived += 1
     
         # Convert relative action to absolute direction
         direction = self.get_absolute_direction(action)
@@ -95,13 +96,20 @@ class SnakeGame():
         self.render()
 
     def restart(self):
+        if self.score > self.high_score:
+            self.high_score = self.score
+        if self.steps_survived > self.highest_steps_survived:
+            self.highest_steps_survived = self.steps_survived
         self.snake_pos = [100, 50]
-        self.snake_body = [[100, 50], [100-10, 50], [100-(2*10), 50]]
+        self.initialize_snake_body()
         self.food_pos = [random.randrange(1, (self.frame_size_x//10)) * 10, random.randrange(1, (self.frame_size_y//10)) * 10]
         self.food_spawn = True
         self.score = 0
+        self.steps_survived = 0
         self.game_over = False
-        return
+
+    def initialize_snake_body(self):
+        self.snake_body = [[100 - (i * 10), 50] for i in range(3)]
     
     def end(self):
         pygame.quit()
@@ -145,14 +153,19 @@ class SnakeGame():
         for pos in self.snake_body:
             pygame.draw.rect(self.game_window, green, pygame.Rect(pos[0], pos[1], 10, 10))
 
+        # Head
+        head_pos = self.snake_body[0]
+        pygame.draw.rect(self.game_window, red, pygame.Rect(head_pos[0], head_pos[1], 10, 10))
+
         # Food
         pygame.draw.rect(self.game_window, white, pygame.Rect(self.food_pos[0], self.food_pos[1], 10, 10))
 
         # Score
         self.show_score(1, white, 'consolas', 20)
+        self.show_high_score(1, white, 'consolas', 20)
+        self.show_highest_steps_survived(1, white, 'consolas', 20)
 
         pygame.display.update()
-        self.fps_controller.tick(self.frame_rate)
 
     # Score
     def show_score(self, choice, color, font, size):
@@ -164,9 +177,28 @@ class SnakeGame():
         else:
             score_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.25)
         self.game_window.blit(score_surface, score_rect)
-        # pygame.display.flip()
 
+    # High Score
+    def show_high_score(self, choice, color, font, size):
+        high_score_font = pygame.font.SysFont(font, size)
+        high_score_surface = high_score_font.render('High Score : ' + str(self.high_score), True, color)
+        high_score_rect = high_score_surface.get_rect()
+        if choice == 1:
+            high_score_rect.midtop = (self.frame_size_x/10, 35)
+        else:
+            high_score_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.15)
+        self.game_window.blit(high_score_surface, high_score_rect)
 
+    # Highest Steps Survived
+    def show_highest_steps_survived(self, choice, color, font, size):
+        steps_font = pygame.font.SysFont(font, size)
+        steps_surface = steps_font.render('Highest Steps Survived : ' + str(self.highest_steps_survived), True, color)
+        steps_rect = steps_surface.get_rect()
+        if choice == 1:
+            steps_rect.midtop = (self.frame_size_x/10, 55)
+        else:
+            steps_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.05)
+        self.game_window.blit(steps_surface, steps_rect)
 
 class SnakeEnvironment(SnakeGame):
     def __init__(self, frame_rate=25):
@@ -203,20 +235,22 @@ class SnakeEnvironment(SnakeGame):
         }
     
     def get_reward(self, old_score) -> int:
-        # got food
-        if self.score > old_score:
-            return 10
-        # still survived
-        elif old_score == self.score:
-            return 1
         # died
-        elif self.game_over:
+        if self.game_over:
             if self.score < 10: # strong penalty for early death
                 return -10
             elif self.score < 50:
                 return -5
             else:
                 return -2
+
+        # got food
+        if self.score > old_score:
+            return 10
+        # still survived
+        elif old_score == self.score:
+            return 1
+
             
     def is_danger(self, direction):
         # Check for danger in the specified direction (STRAIGHT, LEFT, RIGHT)
@@ -271,42 +305,50 @@ class SnakeEnvironment(SnakeGame):
         head_x, head_y = self.snake_pos  # Snake's head position
         food_x, food_y = self.food_pos   # Food's position
         
+        isAhead = False
+        isBehind = False
+        isLeft = False
+        isRight = False
+        
         if self.orientation == 'UP':
             if food_y < head_y:
-                return 'AHEAD'
+                isAhead = True
             elif food_y > head_y:
-                return 'BEHIND'
+                isBehind = True
             elif food_x < head_x:
-                return 'LEFT'
+                isLeft = True
             elif food_x > head_x:
-                return 'RIGHT'
+                isRight = True
         elif self.orientation == 'DOWN':
             if food_y > head_y:
-                return 'AHEAD'
+                isAhead = True
             elif food_y < head_y:
-                return 'BEHIND'
+                isBehind = True
             elif food_x > head_x:
-                return 'LEFT'
+                isLeft = True
             elif food_x < head_x:
-                return 'RIGHT'
+                isRight = True
         elif self.orientation == 'LEFT':
             if food_x < head_x:
-                return 'AHEAD'
+                isAhead = True
             elif food_x > head_x:
-                return 'BEHIND'
+                isBehind = True
             elif food_y > head_y:
-                return 'LEFT'
+                isLeft = True
             elif food_y < head_y:
-                return 'RIGHT'
+                isRight = True
         elif self.orientation == 'RIGHT':
             if food_x > head_x:
-                return 'AHEAD'
+                isAhead = True
             elif food_x < head_x:
-                return 'BEHIND'
+                isBehind = True
             elif food_y < head_y:
-                return 'LEFT'
+                isLeft = True
             elif food_y > head_y:
-                return 'RIGHT'
+                isRight = True
+        
+    
+        return (isAhead, isBehind, isLeft, isRight)
     
     def check_collision(self, position):
         """Check if there is a collision at the given position."""
