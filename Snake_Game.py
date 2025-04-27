@@ -34,6 +34,7 @@ class SnakeGame():
         ]
         self.snake_body = []
         self.initialize_snake_body()
+        self.isRendering = True
 
     # Init game window
     def init(self):
@@ -93,7 +94,8 @@ class SnakeGame():
             if self.snake_pos[0] == block[0] and self.snake_pos[1] == block[1]:
                 self.game_over = True
         
-        self.render()
+        if self.isRendering:
+            self.render()
 
     def restart(self):
         if self.score > self.high_score:
@@ -249,11 +251,14 @@ class SnakeEnvironment(SnakeGame):
                 return -5
             else:
                 return -2
+                
         # got food
         if self.score > old_score:
             return 10
+            
         
         if self.get_food_distance() < old_food_dist:
+            
             return 1
         elif self.get_food_distance() > old_food_dist:
             return -1

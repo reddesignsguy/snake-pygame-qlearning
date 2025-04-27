@@ -10,17 +10,24 @@ epsilon = 1
 # Improve QTable by running agent in the game
 from Snake_Game import SnakeEnvironment
 import pygame, sys, random
+import plotext as plt
+import numpy as np
 
 env = SnakeEnvironment()
 env.init()
+env.isRendering = False
 
 action_space = ['STRAIGHT', 'LEFT', 'RIGHT']
 manual_mode = False  # Set to False for automatic execution
 
+# Store episode scores and epsilon values
+episode_scores = []
+episode_epsilons = []
+
 class QTable:
     def __init__(self):
-        self.alpha_max = 0.1
-        self.alpha_min = 0.0001
+        self.alpha_max = 0.0001
+        self.alpha_min = 0.000001
         self.alpha = self.alpha_max
         self.alpha_decay = 0.99995
         self.gamma = 0.99
@@ -89,13 +96,14 @@ class QTable:
 model = QTable()
 
 eps = 1
-eps_decay = 0.99
+eps_decay = 0.999
 steps = 0
 episode = 0
 episode_length = 1000
-final_episode_length = 10000
+final_episode_length = 2500
 eps_threshold = 0.1  # When epsilon falls below this, increase episode length
 
+render_episode = 20000
 # Frame rate control
 clock = pygame.time.Clock()
 FPS = 5000  # Frames per second
@@ -114,7 +122,6 @@ while True:
             if event.key == pygame.K_SPACE:
                 pass
 
-    print("\n")
     old_state = env.get_state()
     action = None
     if (random.random() < 1 - eps):
@@ -140,19 +147,23 @@ while True:
     steps+=1
     model.update(old_state, reward, action, new_state, percent_convergence)
 
-    print(f"Episode: {episode}")
-    print(f"Step: {steps}")
-    print(f"Action taken: {action}")
-    print(f"Old State: {old_state}")
-    print(f"Reward: {reward}")
-    print(f"New State: {new_state}")
-    print(f"Game Over: {terminated}")
-    print(f"Current Score: {env.score}")
-    print(f"Q Table size: {len(model.table)}")
-    print(f"Epsilon: {eps}")
-    print(f"Alpha: {model.alpha}")
+    # print(f"Episode: {episode}")
+    # print(f"Step: {steps}")
+    # print(f"Action taken: {action}")
+    # print(f"Old State: {old_state}")
+    # print(f"Reward: {reward}")
+    # print(f"New State: {new_state}")
+    # print(f"Game Over: {terminated}")
+    # print(f"Current Score: {env.score}")
+    # print(f"Q Table size: {len(model.table)}")
+    # print(f"Epsilon: {eps}")
+    # print(f"Alpha: {model.alpha}")
 
     if (env.game_over or steps >= episode_length):
+        # Store the final score and epsilon for this episode
+        episode_scores.append(env.score)
+        episode_epsilons.append(eps)
+        
         episode += 1
         steps = 0
         eps *= eps_decay
@@ -160,7 +171,28 @@ while True:
         # Increase episode length when epsilon falls below threshold
         if eps < eps_threshold and episode_length < final_episode_length:
             episode_length = final_episode_length
-            print(f"\nIncreasing episode length to {final_episode_length}!")
+            print(f"\nIncreasing episode length to {final_episode_length} at episode: {episode}!")
+        
+        if episode == render_episode:
+            env.isRendering = True
+            # Create terminal plot
+            plt.clear_figure()
+            
+            # Plot scores and epsilon on the same graph
+            plt.plot(episode_scores, label="Score per Episode")
+            
+            # Add moving average for scores
+            window_size = 100
+            if len(episode_scores) >= window_size:
+                moving_avg = np.convolve(episode_scores, np.ones(window_size)/window_size, mode='valid')
+                plt.plot(range(window_size-1, len(episode_scores)), moving_avg, 
+                        label=f"{window_size}-episode Moving Average")
+        
+            
+            plt.title("Snake Game Performance")
+            plt.xlabel("Episode")
+            plt.ylabel("Score / Epsilon")
+            plt.show()
             
         env.restart()
 
