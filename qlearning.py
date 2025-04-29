@@ -1,3 +1,5 @@
+""" Made by reddesignsguy (Albany Patriawan) (4/29/2025) """
+
 from Snake_Game import SnakeEnvironment
 from pynput import keyboard
 from qtable import QTable
@@ -5,30 +7,8 @@ import pygame, sys, random
 import plotext as plt
 import numpy as np
 
-''' Controls:
-ESC -- Exit
- '''
-def on_press(key):
-    if key == keyboard.Key.esc:
-        print()
-        env.end()
-        sys.exit()
-    try:
-        k = key.char  # single-char keys
-    except:
-        k = key.name  # other keys
-    if k in ['1', '2', 'left', 'right']:  # keys of interest
-        # self.keys.append(k)  # store it in global-like variable
-        print('Key pressed: ' + k)
-        return False  # stop listener; remove this if want more keys
-
-listener = keyboard.Listener(on_press=on_press)
-listener.start()  
-
-
-''' Q-Learning '''
 # Params
-render_episode = 5000 # Visualize the snake game at this episode
+render_episode = 50000 # Visualize the snake game at this episode
 eps = 1
 eps_decay = 0.999
 min_eps = 0.01
@@ -41,12 +21,13 @@ episode_scores = []
 episode_epsilons = []
 
 env = SnakeEnvironment(frame_rate=35)
-
 model = QTable(env.action_space)
 steps_without_food = 0
 cur_score = env.score
 
 while True:
+    env.injected_text = f"Episode: {episode}"
+
     # Press space bar to end
     if env.game_window:
         for event in pygame.event.get():
@@ -56,9 +37,6 @@ while True:
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     env.end()
-                    pass
-                if event.key == pygame.K_SPACE:
-                    env.toggle_game_window() 
                     pass
 
     old_state = env.get_state()
@@ -100,23 +78,20 @@ while True:
         if episode % 50 == 0:
             print(f"--------\n Episode {episode}: \n Mean {sum(episode_scores) / episode} \n High {env.high_score}")
 
-        # Visualize snake
+        # Show snake game and plot
         if episode == render_episode:
             env.open_game_window()
-            # Create terminal plot
+
             plt.clear_figure()
-            
-            # Plot scores and epsilon on the same graph
             plt.plot(episode_scores, label="Score per Episode")
             
-            # Add moving average for scores
+            # Visualize moving average
             window_size = 100
             if len(episode_scores) >= window_size:
                 moving_avg = np.convolve(episode_scores, np.ones(window_size)/window_size, mode='valid')
                 plt.plot(range(window_size-1, len(episode_scores)), moving_avg, 
                         label=f"{window_size}-episode Moving Average")
         
-            
             plt.title("Snake Game Performance")
             plt.xlabel("Episode")
             plt.ylabel("Score / Epsilon")

@@ -1,6 +1,9 @@
 """
 Snake Eater
 Made with PyGame
+
+Original snake game code made by: rajatdiptabiswas
+Modified snake game code and learning environment by: reddesignsguy (Albany Patriawan) (4/29/2025)
 """
 
 import pygame, sys, time, random
@@ -36,6 +39,7 @@ class SnakeGame():
         ]
         self.snake_body = []
         self.initialize_snake_body()
+        self.injected_text = ""
 
 
     def toggle_game_window(self):
@@ -201,10 +205,11 @@ class SnakeGame():
         # Food
         pygame.draw.rect(self.game_window, white, pygame.Rect(self.food_pos[0], self.food_pos[1], 10, 10))
 
-        # Score
+        # Stats
         self.show_score(1, white, 'consolas', 20)
         self.show_high_score(1, white, 'consolas', 20)
         self.show_highest_steps_survived(1, white, 'consolas', 20)
+        self.show_injected_text(2, white, 'consolas', 20)
 
         pygame.display.update()
 
@@ -214,7 +219,7 @@ class SnakeGame():
         score_surface = score_font.render('Score : ' + str(self.score), True, color)
         score_rect = score_surface.get_rect()
         if choice == 1:
-            score_rect.midtop = (self.frame_size_x/10, 15)
+            score_rect.topleft = (10, 15)
         else:
             score_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.25)
         self.game_window.blit(score_surface, score_rect)
@@ -225,7 +230,7 @@ class SnakeGame():
         high_score_surface = high_score_font.render('High Score : ' + str(self.high_score), True, color)
         high_score_rect = high_score_surface.get_rect()
         if choice == 1:
-            high_score_rect.midtop = (self.frame_size_x/10, 35)
+            high_score_rect.topleft = (10, 35)
         else:
             high_score_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.15)
         self.game_window.blit(high_score_surface, high_score_rect)
@@ -236,7 +241,17 @@ class SnakeGame():
         steps_surface = steps_font.render('Highest Steps Survived : ' + str(self.highest_steps_survived), True, color)
         steps_rect = steps_surface.get_rect()
         if choice == 1:
-            steps_rect.midtop = (self.frame_size_x/10, 55)
+            steps_rect.topleft = (10, 55)
+        else:
+            steps_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.05)
+        self.game_window.blit(steps_surface, steps_rect)
+    
+    def show_injected_text(self, choice, color, font, size):
+        steps_font = pygame.font.SysFont(font, size)
+        steps_surface = steps_font.render(self.injected_text, True, color)
+        steps_rect = steps_surface.get_rect()
+        if choice == 1:
+            steps_rect.topleft = (10, 75)
         else:
             steps_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.05)
         self.game_window.blit(steps_surface, steps_rect)

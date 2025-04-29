@@ -1,3 +1,4 @@
+""" Made by reddesignsguy (Albany Patriawan) (4/29/2025) """
 class QTable:
     def __init__(self, action_space):
         self.alpha_max = 0.1
