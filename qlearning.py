@@ -7,8 +7,11 @@ import pygame, sys, random
 import plotext as plt
 import numpy as np
 
-# Params
-render_episode = 5000 # Visualize the snake game at this episode
+# Quality of Life params
+render_episode = 1000 # Visualizes the snake game at this episode
+frame_rate = 100
+
+# Model Params
 eps = 1
 eps_decay = 0.999
 min_eps = 0.01
@@ -20,7 +23,7 @@ mean_score = 0
 episode_scores = []
 episode_epsilons = []
 
-env = SnakeEnvironment(frame_rate=35)
+env = SnakeEnvironment(frame_rate=frame_rate)
 model = QTable(env.action_space)
 steps_without_food = 0
 cur_score = env.score
