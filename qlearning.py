@@ -1,11 +1,9 @@
 """ Made by reddesignsguy (Albany Patriawan) (4/29/2025) """
 
 from Snake_Game import SnakeEnvironment
-from pynput import keyboard
 from qtable import QTable
 import pygame, sys, random
 import plotext as plt
-import numpy as np
 
 # Params
 render_episode = 5000 # Visualize the snake game at this episode
