@@ -1,13 +1,34 @@
 from Snake_Game import SnakeEnvironment
+from pynput import keyboard
 from qtable import QTable
 import pygame, sys, random
 import plotext as plt
 import numpy as np
 
-''' Press space bar to end training! '''
+''' Controls:
+ESC -- Exit
+ '''
+def on_press(key):
+    if key == keyboard.Key.esc:
+        print()
+        env.end()
+        sys.exit()
+    try:
+        k = key.char  # single-char keys
+    except:
+        k = key.name  # other keys
+    if k in ['1', '2', 'left', 'right']:  # keys of interest
+        # self.keys.append(k)  # store it in global-like variable
+        print('Key pressed: ' + k)
+        return False  # stop listener; remove this if want more keys
 
+listener = keyboard.Listener(on_press=on_press)
+listener.start()  
+
+
+''' Q-Learning '''
 # Params
-render_episode = 10000 # Visualize the snake game at this episode
+render_episode = 5000 # Visualize the snake game at this episode
 eps = 1
 eps_decay = 0.999
 min_eps = 0.01
@@ -19,7 +40,7 @@ mean_score = 0
 episode_scores = []
 episode_epsilons = []
 
-env = SnakeEnvironment()
+env = SnakeEnvironment(frame_rate=35)
 
 model = QTable(env.action_space)
 steps_without_food = 0
@@ -33,11 +54,13 @@ while True:
                 pygame.quit()
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_ESCAPE:
                     env.end()
                     pass
+                if event.key == pygame.K_SPACE:
+                    env.toggle_game_window() 
+                    pass
 
-    # Important metrics
     old_state = env.get_state()
 
     # Perform action

@@ -13,6 +13,8 @@ red = pygame.Color(255, 0, 0)
 green = pygame.Color(0, 255, 0)
 blue = pygame.Color(0, 0, 255)
 
+clock = pygame.time.Clock()
+
 class SnakeGame():
     def __init__(self, get_direction=None, fr=20):
         self.frame_size_x = int(720)
@@ -35,7 +37,14 @@ class SnakeGame():
         self.snake_body = []
         self.initialize_snake_body()
 
-    # Init game window
+
+    def toggle_game_window(self):
+        if self.game_window:
+            self.close_game_window()
+        else:
+            self.open_game_window()
+            
+        
     def open_game_window(self):
         check_errors = pygame.init()
         if check_errors[1] > 0:
@@ -47,6 +56,10 @@ class SnakeGame():
         # Initialise game window
         pygame.display.set_caption('Snake Eater')
         self.game_window = pygame.display.set_mode((self.frame_size_x, self.frame_size_y))
+    
+    def close_game_window(self):
+        pygame.quit()
+        self.game_window = None
 
     def step(self, action):
         if self.game_over:
@@ -94,6 +107,7 @@ class SnakeGame():
                 self.game_over = True
         
         if self.game_window:
+            clock.tick(self.frame_rate)
             self.render()
 
     def restart(self):
@@ -141,7 +155,6 @@ class SnakeGame():
     
     def end(self):
         pygame.quit()
-        sys.exit()
         return
         
     def get_absolute_direction(self, relative_action):

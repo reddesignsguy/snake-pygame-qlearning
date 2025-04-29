@@ -36,7 +36,7 @@ class QTable:
         if action not in self.table[state]:
             self.table[state][action] = 0
 
-        # Find maximum Q-value for the next state
+        # Find maximum Q-value for the next state (to be used in Bellman equation)
         max_next_q = float('-inf')
         for direction in self.action_space:
             next_q = self.table.get(new_state, {}).get(direction, 0)
