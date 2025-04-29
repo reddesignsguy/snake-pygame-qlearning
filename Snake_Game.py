@@ -1,6 +1,9 @@
 """
 Snake Eater
 Made with PyGame
+
+Original snake game code made by: rajatdiptabiswas
+Modified snake game code and learning environment by: reddesignsguy (Albany Patriawan) (4/29/2025)
 """
 
 import pygame, sys, time, random
@@ -12,6 +15,8 @@ white = pygame.Color(255, 255, 255)
 red = pygame.Color(255, 0, 0)
 green = pygame.Color(0, 255, 0)
 blue = pygame.Color(0, 0, 255)
+
+clock = pygame.time.Clock()
 
 class SnakeGame():
     def __init__(self, get_direction=None, fr=20):
@@ -34,10 +39,17 @@ class SnakeGame():
         ]
         self.snake_body = []
         self.initialize_snake_body()
-        self.isRendering = True
+        self.injected_text = ""
 
-    # Init game window
-    def init(self):
+
+    def toggle_game_window(self):
+        if self.game_window:
+            self.close_game_window()
+        else:
+            self.open_game_window()
+            
+        
+    def open_game_window(self):
         check_errors = pygame.init()
         if check_errors[1] > 0:
             print(f'[!] Had {check_errors[1]} errors when initialising game, exiting...')
@@ -48,6 +60,10 @@ class SnakeGame():
         # Initialise game window
         pygame.display.set_caption('Snake Eater')
         self.game_window = pygame.display.set_mode((self.frame_size_x, self.frame_size_y))
+    
+    def close_game_window(self):
+        pygame.quit()
+        self.game_window = None
 
     def step(self, action):
         if self.game_over:
@@ -94,7 +110,8 @@ class SnakeGame():
             if self.snake_pos[0] == block[0] and self.snake_pos[1] == block[1]:
                 self.game_over = True
         
-        if self.isRendering:
+        if self.game_window:
+            clock.tick(self.frame_rate)
             self.render()
 
     def restart(self):
@@ -110,12 +127,38 @@ class SnakeGame():
         self.steps_survived = 0
         self.game_over = False
 
+     # Initialize snake body of length 3, going completely straight in a random direction: up, down, left, or right
     def initialize_snake_body(self):
-        self.snake_body = [[100 - (i * 10), 50] for i in range(3)]
+        directions = {
+            'UP': (0, -10),
+            'DOWN': (0, 10),
+            'LEFT': (-10, 0),
+            'RIGHT': (10, 0)
+        }
+
+        direction = random.choice(list(directions.keys()))
+        dx, dy = directions[direction]
+
+        # Set boundaries depending on direction to ensure full body fits
+        if direction == 'UP':
+            x = random.randint(0, self.frame_size_x // 10 - 1) * 10
+            y = random.randint(2, self.frame_size_y // 10 - 1) * 10
+        elif direction == 'DOWN':
+            x = random.randint(0, self.frame_size_x // 10 - 1) * 10
+            y = random.randint(0, self.frame_size_y // 10 - 3) * 10
+        elif direction == 'LEFT':
+            x = random.randint(2, self.frame_size_x // 10 - 1) * 10
+            y = random.randint(0, self.frame_size_y // 10 - 1) * 10
+        elif direction == 'RIGHT':
+            x = random.randint(0, self.frame_size_x // 10 - 3) * 10
+            y = random.randint(0, self.frame_size_y // 10 - 1) * 10
+
+        # Create the snake body: head followed by two more parts in the opposite direction
+        self.snake_body = [[x - i * dx, y - i * dy] for i in range(3)]
+        self.orientation = direction
     
     def end(self):
         pygame.quit()
-        sys.exit()
         return
         
     def get_absolute_direction(self, relative_action):
@@ -162,10 +205,11 @@ class SnakeGame():
         # Food
         pygame.draw.rect(self.game_window, white, pygame.Rect(self.food_pos[0], self.food_pos[1], 10, 10))
 
-        # Score
+        # Stats
         self.show_score(1, white, 'consolas', 20)
         self.show_high_score(1, white, 'consolas', 20)
         self.show_highest_steps_survived(1, white, 'consolas', 20)
+        self.show_injected_text(2, white, 'consolas', 20)
 
         pygame.display.update()
 
@@ -175,7 +219,7 @@ class SnakeGame():
         score_surface = score_font.render('Score : ' + str(self.score), True, color)
         score_rect = score_surface.get_rect()
         if choice == 1:
-            score_rect.midtop = (self.frame_size_x/10, 15)
+            score_rect.topleft = (10, 15)
         else:
             score_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.25)
         self.game_window.blit(score_surface, score_rect)
@@ -186,7 +230,7 @@ class SnakeGame():
         high_score_surface = high_score_font.render('High Score : ' + str(self.high_score), True, color)
         high_score_rect = high_score_surface.get_rect()
         if choice == 1:
-            high_score_rect.midtop = (self.frame_size_x/10, 35)
+            high_score_rect.topleft = (10, 35)
         else:
             high_score_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.15)
         self.game_window.blit(high_score_surface, high_score_rect)
@@ -197,7 +241,17 @@ class SnakeGame():
         steps_surface = steps_font.render('Highest Steps Survived : ' + str(self.highest_steps_survived), True, color)
         steps_rect = steps_surface.get_rect()
         if choice == 1:
-            steps_rect.midtop = (self.frame_size_x/10, 55)
+            steps_rect.topleft = (10, 55)
+        else:
+            steps_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.05)
+        self.game_window.blit(steps_surface, steps_rect)
+    
+    def show_injected_text(self, choice, color, font, size):
+        steps_font = pygame.font.SysFont(font, size)
+        steps_surface = steps_font.render(self.injected_text, True, color)
+        steps_rect = steps_surface.get_rect()
+        if choice == 1:
+            steps_rect.topleft = (10, 75)
         else:
             steps_rect.midtop = (self.frame_size_x/2, self.frame_size_y/1.05)
         self.game_window.blit(steps_surface, steps_rect)
@@ -205,13 +259,14 @@ class SnakeGame():
 class SnakeEnvironment(SnakeGame):
     def __init__(self, frame_rate=25):
         super().__init__(fr=frame_rate)
+        self.action_space = ['STRAIGHT', 'LEFT', 'RIGHT']
     
     def step(self, action):
-        old_score = self.score
-        old_food_dist = self.get_food_distance()
+        tmp_score = self.score
+        tmp_food_dist = self.get_food_distance()
         super().step(action)
 
-        reward = self.get_reward(old_score, old_food_dist)
+        reward = self.get_reward(tmp_score, tmp_food_dist)
         new_state = self.get_state()
         terminated = self.game_over
         return (reward, new_state, terminated)
@@ -228,13 +283,13 @@ class SnakeEnvironment(SnakeGame):
         # State 3: Food is to the left / right / ahead / behind
         food_position = self.get_food_position()
 
-        return {
-            "danger_straight": danger_straight,
-            "danger_left": danger_left,
-            "danger_right": danger_right,
-            "direction": direction,
-            "food_position": food_position
-        }
+        return (
+            danger_straight,
+            danger_left,
+            danger_right,
+             direction,
+            food_position
+        )
     
     def get_food_distance(self):
         """Calculate Euclidean distance between snake head and food"""
@@ -243,7 +298,6 @@ class SnakeEnvironment(SnakeGame):
         return ((head_x - food_x) ** 2 + (head_y - food_y) ** 2) ** 0.5
 
     def get_reward(self, old_score, old_food_dist) -> int:
-        # died
         if self.game_over:
             if self.score < 10: # strong penalty for early death
                 return -10
@@ -255,13 +309,9 @@ class SnakeEnvironment(SnakeGame):
         # got food
         if self.score > old_score:
             return 10
-            
         
         if self.get_food_distance() < old_food_dist:
-            
             return 1
-        elif self.get_food_distance() > old_food_dist:
-            return -1
 
         # still survived
         if old_score == self.score:
@@ -269,10 +319,11 @@ class SnakeEnvironment(SnakeGame):
 
             
     def is_danger(self, direction):
+        num_blocks = 1
         # Check for danger in the specified direction (STRAIGHT, LEFT, RIGHT)
         if direction == 'STRAIGHT':
             # Check straight ahead in the current direction for up to 10 blocks
-            for i in range(1, 11):  # Iterate from 1 to 10 blocks ahead
+            for i in range(1, 1 + num_blocks):  # Iterate from 1 to 10 blocks ahead
                 if self.orientation == 'UP':
                     new_pos = [self.snake_pos[0], self.snake_pos[1] - i * 10]  # Straight up
                 elif self.orientation == 'DOWN':
@@ -287,7 +338,7 @@ class SnakeEnvironment(SnakeGame):
 
         elif direction == 'LEFT':
             # Check left of the snake's head for up to 10 blocks
-            for i in range(1, 11):  # Iterate from 1 to 10 blocks to the left
+            for i in range(1, 1 + num_blocks):  # Iterate from 1 to 10 blocks to the left
                 if self.orientation == 'UP':
                     new_pos = [self.snake_pos[0] - i * 10, self.snake_pos[1]]  # Look left
                 elif self.orientation == 'DOWN':
@@ -302,7 +353,7 @@ class SnakeEnvironment(SnakeGame):
 
         elif direction == 'RIGHT':
             # Check right of the snake's head for up to 10 blocks
-            for i in range(1, 11):  # Iterate from 1 to 10 blocks to the right
+            for i in range(1, 1 + num_blocks):  # Iterate from 1 to 10 blocks to the right
                 if self.orientation == 'UP':
                     new_pos = [self.snake_pos[0] + i * 10, self.snake_pos[1]]  # Look right
                 elif self.orientation == 'DOWN':
