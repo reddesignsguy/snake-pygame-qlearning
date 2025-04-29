@@ -5,8 +5,11 @@ from qtable import QTable
 import pygame, sys, random
 import plotext as plt
 
-# Params
-render_episode = 5000 # Visualize the snake game at this episode
+# Quality of Life params
+render_episode = 5000 # Visualizes the snake game at this episode
+frame_rate = 50
+
+# Model Params
 eps = 1
 eps_decay = 0.999
 min_eps = 0.01
