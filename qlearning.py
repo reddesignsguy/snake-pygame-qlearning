@@ -8,7 +8,7 @@ import plotext as plt
 import numpy as np
 
 # Params
-render_episode = 50000 # Visualize the snake game at this episode
+render_episode = 5000 # Visualize the snake game at this episode
 eps = 1
 eps_decay = 0.999
 min_eps = 0.01
