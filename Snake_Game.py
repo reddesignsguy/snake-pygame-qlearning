@@ -34,10 +34,9 @@ class SnakeGame():
         ]
         self.snake_body = []
         self.initialize_snake_body()
-        self.isRendering = True
 
     # Init game window
-    def init(self):
+    def open_game_window(self):
         check_errors = pygame.init()
         if check_errors[1] > 0:
             print(f'[!] Had {check_errors[1]} errors when initialising game, exiting...')
@@ -94,7 +93,7 @@ class SnakeGame():
             if self.snake_pos[0] == block[0] and self.snake_pos[1] == block[1]:
                 self.game_over = True
         
-        if self.isRendering:
+        if self.game_window:
             self.render()
 
     def restart(self):
@@ -110,9 +109,8 @@ class SnakeGame():
         self.steps_survived = 0
         self.game_over = False
 
+     # Initialize snake body of length 3, going completely straight in a random direction: up, down, left, or right
     def initialize_snake_body(self):
-        # self.snake_body = [[100 - (i * 10), 50] for i in range(3)]
-
         directions = {
             'UP': (0, -10),
             'DOWN': (0, 10),
@@ -233,13 +231,14 @@ class SnakeGame():
 class SnakeEnvironment(SnakeGame):
     def __init__(self, frame_rate=25):
         super().__init__(fr=frame_rate)
+        self.action_space = ['STRAIGHT', 'LEFT', 'RIGHT']
     
     def step(self, action):
-        old_score = self.score
-        old_food_dist = self.get_food_distance()
+        tmp_score = self.score
+        tmp_food_dist = self.get_food_distance()
         super().step(action)
 
-        reward = self.get_reward(old_score, old_food_dist)
+        reward = self.get_reward(tmp_score, tmp_food_dist)
         new_state = self.get_state()
         terminated = self.game_over
         return (reward, new_state, terminated)
@@ -256,13 +255,13 @@ class SnakeEnvironment(SnakeGame):
         # State 3: Food is to the left / right / ahead / behind
         food_position = self.get_food_position()
 
-        return {
-            "danger_straight": danger_straight,
-            "danger_left": danger_left,
-            "danger_right": danger_right,
-            "direction": direction,
-            "food_position": food_position
-        }
+        return (
+            danger_straight,
+            danger_left,
+            danger_right,
+             direction,
+            food_position
+        )
     
     def get_food_distance(self):
         """Calculate Euclidean distance between snake head and food"""
@@ -271,8 +270,6 @@ class SnakeEnvironment(SnakeGame):
         return ((head_x - food_x) ** 2 + (head_y - food_y) ** 2) ** 0.5
 
     def get_reward(self, old_score, old_food_dist) -> int:
-        # old ------------------------
-        # died
         if self.game_over:
             if self.score < 10: # strong penalty for early death
                 return -10
