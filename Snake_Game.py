@@ -111,7 +111,35 @@ class SnakeGame():
         self.game_over = False
 
     def initialize_snake_body(self):
-        self.snake_body = [[100 - (i * 10), 50] for i in range(3)]
+        # self.snake_body = [[100 - (i * 10), 50] for i in range(3)]
+
+        directions = {
+            'UP': (0, -10),
+            'DOWN': (0, 10),
+            'LEFT': (-10, 0),
+            'RIGHT': (10, 0)
+        }
+
+        direction = random.choice(list(directions.keys()))
+        dx, dy = directions[direction]
+
+        # Set boundaries depending on direction to ensure full body fits
+        if direction == 'UP':
+            x = random.randint(0, self.frame_size_x // 10 - 1) * 10
+            y = random.randint(2, self.frame_size_y // 10 - 1) * 10
+        elif direction == 'DOWN':
+            x = random.randint(0, self.frame_size_x // 10 - 1) * 10
+            y = random.randint(0, self.frame_size_y // 10 - 3) * 10
+        elif direction == 'LEFT':
+            x = random.randint(2, self.frame_size_x // 10 - 1) * 10
+            y = random.randint(0, self.frame_size_y // 10 - 1) * 10
+        elif direction == 'RIGHT':
+            x = random.randint(0, self.frame_size_x // 10 - 3) * 10
+            y = random.randint(0, self.frame_size_y // 10 - 1) * 10
+
+        # Create the snake body: head followed by two more parts in the opposite direction
+        self.snake_body = [[x - i * dx, y - i * dy] for i in range(3)]
+        self.orientation = direction
     
     def end(self):
         pygame.quit()
@@ -243,6 +271,7 @@ class SnakeEnvironment(SnakeGame):
         return ((head_x - food_x) ** 2 + (head_y - food_y) ** 2) ** 0.5
 
     def get_reward(self, old_score, old_food_dist) -> int:
+        # old ------------------------
         # died
         if self.game_over:
             if self.score < 10: # strong penalty for early death
@@ -255,13 +284,9 @@ class SnakeEnvironment(SnakeGame):
         # got food
         if self.score > old_score:
             return 10
-            
         
         if self.get_food_distance() < old_food_dist:
-            
             return 1
-        elif self.get_food_distance() > old_food_dist:
-            return -1
 
         # still survived
         if old_score == self.score:
@@ -269,10 +294,11 @@ class SnakeEnvironment(SnakeGame):
 
             
     def is_danger(self, direction):
+        num_blocks = 1
         # Check for danger in the specified direction (STRAIGHT, LEFT, RIGHT)
         if direction == 'STRAIGHT':
             # Check straight ahead in the current direction for up to 10 blocks
-            for i in range(1, 11):  # Iterate from 1 to 10 blocks ahead
+            for i in range(1, 1 + num_blocks):  # Iterate from 1 to 10 blocks ahead
                 if self.orientation == 'UP':
                     new_pos = [self.snake_pos[0], self.snake_pos[1] - i * 10]  # Straight up
                 elif self.orientation == 'DOWN':
@@ -287,7 +313,7 @@ class SnakeEnvironment(SnakeGame):
 
         elif direction == 'LEFT':
             # Check left of the snake's head for up to 10 blocks
-            for i in range(1, 11):  # Iterate from 1 to 10 blocks to the left
+            for i in range(1, 1 + num_blocks):  # Iterate from 1 to 10 blocks to the left
                 if self.orientation == 'UP':
                     new_pos = [self.snake_pos[0] - i * 10, self.snake_pos[1]]  # Look left
                 elif self.orientation == 'DOWN':
@@ -302,7 +328,7 @@ class SnakeEnvironment(SnakeGame):
 
         elif direction == 'RIGHT':
             # Check right of the snake's head for up to 10 blocks
-            for i in range(1, 11):  # Iterate from 1 to 10 blocks to the right
+            for i in range(1, 1 + num_blocks):  # Iterate from 1 to 10 blocks to the right
                 if self.orientation == 'UP':
                     new_pos = [self.snake_pos[0] + i * 10, self.snake_pos[1]]  # Look right
                 elif self.orientation == 'DOWN':
