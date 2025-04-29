@@ -1,50 +1,59 @@
-# Snake Eater
-A snake game written in Python using the Pygame library.
+# Snake Game - QLearning
+<img width="358" alt="image" src="https://github.com/user-attachments/assets/6f135ba6-e1cc-43f7-ac20-f55ed854f755" />
 
+This project is a reinforcement learning experiment where an AI agent learns to play the classic Snake game using Q-Learning.
 
-## Installing
-Download the Python 3 installer package from the official website and install it, if not installed previously.
+## Installation
 
-Run the following in the terminal to install the Pygame library
-```
-pip3 install pygame
-```
+Make sure you have Python 3.7+ installed.
 
+Install the required dependencies:
 
-## Running the application
-Download the source code from the repository and run the file just as any other Python script (.py) file.
-```
-python3 Snake\ Game.py
+```bash
+pip install pygame plotext numpy
 ```
 
-The `difficulty` variable can be changed with the values provided in the comment to set the difficulty level.
+## Usage
+To run the program, go into the home directory where qlearning.py is and run:
+```bash
+python qlearning.py
+```
+or
+```bash
+python3 qlearning.py
+```
 
-The rest of the code is properly commented and self explanatory. Tweaks can be made to change the play style or visuals of the game.
+You can go to qlearning.py and adjust the following quality of life parameters:
+1. ``render_episode`` -- Visualize the snake game and learning progress in the terminal when training reaches episode: ``render_episode``
+2. ``frame_rate`` -- Frame rate of snake game visualization
+
+## State Representation
+
+The Q-learning agent observes the environment using a compact feature set that enables fast learning:
+
+- **Danger indicators relative to snake** (Booleans):
+  - `danger_ahead`
+  - `danger_left`
+  - `danger_right`
+- **Snake’s current direction** (4 values): `up`, `down`, `left`, `right`
+- **Relative food location** (Booleans):
+  - `food_ahead`
+  - `food_behind`
+  - `food_left`
+  - `food_right`
+
+This results in a total of 1536 **hypothetical** states (`2³ danger × 4 directions × 2⁴ food positions`). In practice, many of these states aren't reachable, e.g. the food can't be both to the left and right.
+
+## Actions
+
+The agent chooses from 3 discrete actions:
+
+- Turn left
+- Turn right
+- Move straight
+
+## Images:
+<img width="644" alt="image" src="https://github.com/user-attachments/assets/a9f9b295-550d-47d5-a65e-ac56013042b2" />
+<img width="847" alt="image" src="https://github.com/user-attachments/assets/fea807a4-6382-4959-bcd2-b2d804ff995b" />
 
 
-## Screenshots
-
-![1](https://user-images.githubusercontent.com/32998741/33873439-27f635b2-df45-11e7-8fc1-f7812f17447a.png)
-*Written using PyCharm*
-
-![2](https://user-images.githubusercontent.com/32998741/33873437-2780ed2a-df45-11e7-9776-b1f151fa4e02.png)
-*Active game screen*
-
-![3](https://user-images.githubusercontent.com/32998741/33873440-28647360-df45-11e7-8291-b82d5646352f.png)
-*Game over screen*
-
-
-## Prerequisites
-* [Python](https://www.python.org)
-* [Pygame](https://www.pygame.org/wiki/GettingStarted), an open source Python library for making multimedia applications
-
-
-## Authors
-
-* **Rajat Dipta Biswas** - *Initial work*
-
-See also the list of [contributors](https://github.com/rajatdiptabiswas/snake-pygame/graphs/contributors) who participated in this project.
-
-## Acknowledgements
-* [Pygame Documentations](https://www.pygame.org/docs/)
-* [Udemy: Python Game Development](https://www.udemy.com/python-game-development-creating-a-snake-game-from-scratch/learn/v4/overview)
